@@ -1,0 +1,160 @@
+@model ThiSmartUI.Models.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+    Layout = "_LayoutLogin";
+}
+
+<!--
+    Trang Login - ThiSmart
+    Design: Glassmorphism + Gradient background
+    UX: Mobile-first, Accessibility compliant (WCAG 2.1 AA)
+-->
+
+<div class="login-container">
+    <!-- Background decoration -->
+    <div class="login-bg-decoration">
+        <div class="decoration-circle circle-1"></div>
+        <div class="decoration-circle circle-2"></div>
+        <div class="decoration-circle circle-3"></div>
+    </div>
+
+    <!-- Login Card -->
+    <div class="login-card">
+        <!-- Logo & Branding -->
+        <div class="login-header">
+            <div class="logo-icon">
+                <i class="bi bi-mortarboard-fill"></i>
+            </div>
+            <h1 class="login-title">ThiSmart</h1>
+            <p class="login-subtitle">Hệ thống thi trực tuyến thông minh</p>
+        </div>
+
+        <!-- Login Form -->
+        <form asp-action="Login" asp-controller="Account" method="post" class="login-form" id="loginForm">
+            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+            
+            <!-- Validation Summary - Hiển thị lỗi chung -->
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+            </div>
+
+            <!-- Username Field -->
+            <div class="form-floating mb-3">
+                <input asp-for="Username" 
+                       type="text" 
+                       class="form-control" 
+                       id="usernameInput"
+                       placeholder="Tên đăng nhập"
+                       autocomplete="username"
+                       autofocus />
+                <label for="usernameInput">
+                    <i class="bi bi-person-fill me-2"></i>Tên đăng nhập
+                </label>
+                <span asp-validation-for="Username" class="text-danger validation-message"></span>
+            </div>
+
+            <!-- Password Field -->
+            <div class="form-floating mb-3 position-relative">
+                <input asp-for="Password" 
+                       type="password" 
+                       class="form-control" 
+                       id="passwordInput"
+                       placeholder="Mật khẩu"
+                       autocomplete="current-password" />
+                <label for="passwordInput">
+                    <i class="bi bi-lock-fill me-2"></i>Mật khẩu
+                </label>
+                <!-- Toggle password visibility -->
+                <button type="button" 
+                        class="btn-toggle-password" 
+                        id="togglePassword"
+                        aria-label="Hiển thị/Ẩn mật khẩu">
+                    <i class="bi bi-eye-fill"></i>
+                </button>
+                <span asp-validation-for="Password" class="text-danger validation-message"></span>
+            </div>
+
+            <!-- Remember Me & Forgot Password -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="form-check">
+                    <input asp-for="RememberMe" 
+                           type="checkbox" 
+                           class="form-check-input" 
+                           id="rememberMeCheck" />
+                    <label class="form-check-label" for="rememberMeCheck">
+                        Ghi nhớ đăng nhập
+                    </label>
+                </div>
+                <a href="#" class="forgot-password-link">Quên mật khẩu?</a>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary btn-login" id="loginBtn">
+                <span class="btn-text">Đăng nhập</span>
+                <span class="btn-loading d-none">
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    Đang xử lý...
+                </span>
+            </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="login-divider">
+            <span>hoặc</span>
+        </div>
+
+        <!-- Social Login (placeholder) -->
+        <div class="social-login">
+            <button type="button" class="btn btn-outline-secondary btn-social" disabled>
+                <i class="bi bi-google me-2"></i>
+                Đăng nhập bằng Google
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="login-footer">
+            <p>Chưa có tài khoản? <a href="#">Đăng ký ngay</a></p>
+        </div>
+    </div>
+
+    <!-- Copyright -->
+    <div class="login-copyright">
+        <p>&copy; 2025 ThiSmart. All rights reserved.</p>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('passwordInput');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('bi-eye-fill');
+                icon.classList.add('bi-eye-slash-fill');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('bi-eye-slash-fill');
+                icon.classList.add('bi-eye-fill');
+            }
+        });
+
+        // Form submit loading state
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const btn = document.getElementById('loginBtn');
+            const btnText = btn.querySelector('.btn-text');
+            const btnLoading = btn.querySelector('.btn-loading');
+            
+            // Chỉ hiển thị loading nếu form valid
+            if (this.checkValidity()) {
+                btnText.classList.add('d-none');
+                btnLoading.classList.remove('d-none');
+                btn.disabled = true;
+            }
+        });
+    </script>
+}
