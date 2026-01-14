@@ -1,0 +1,32 @@
+@* 
+    Teacher Header Component
+    Partial view for header in Teacher module
+*@
+
+@{
+    var title = ViewData["Title"]?.ToString() ?? "Dashboard";
+    var subtitle = ViewData["Subtitle"]?.ToString();
+}
+
+<header class="teacher-header">
+    <div class="teacher-header-content">
+        <div class="teacher-header-left">
+            <button type="button" class="menu-toggle-btn" id="menuToggle" aria-label="Toggle menu">
+                <i data-lucide="menu"></i>
+            </button>
+            <div>
+                <h1 class="page-title">@title</h1>
+                @if (!string.IsNullOrEmpty(subtitle))
+                {
+                    <p class="page-subtitle">@subtitle</p>
+                }
+            </div>
+        </div>
+        <div class="teacher-header-right">
+            @if (IsSectionDefined("HeaderActions"))
+            {
+                @RenderSection("HeaderActions", required: false)
+            }
+        </div>
+    </div>
+</header>

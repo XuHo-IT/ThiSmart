@@ -1,0 +1,80 @@
+@* 
+    Teacher Sidebar Component
+    Partial view for sidebar navigation in Teacher module
+*@
+
+@{
+    var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+    var fullName = ViewContext.HttpContext.Session.GetString("FullName") ?? "Teacher";
+    var userInitial = fullName.Length > 0 ? fullName[0].ToString().ToUpper() : "T";
+}
+
+<aside class="teacher-sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <a href="/" class="sidebar-logo">
+            <svg class="sidebar-logo-icon" width="32" height="32" viewBox="0 0 48 48" fill="currentColor">
+                <path d="M4 42.4379C4 42.4379 14.0962 36.0744 24 41.1692C35.0664 46.8624 44 42.2078 44 42.2078L44 7.01134C44 7.01134 35.068 11.6577 24.0031 5.96913C14.0971 0.876274 4 7.27094 4 7.27094L4 42.4379Z" />
+            </svg>
+            <span class="sidebar-logo-text">ThiExam</span>
+        </a>
+    </div>
+
+    <nav class="sidebar-nav">
+        <!-- Main Navigation -->
+        <div class="sidebar-section">
+            <a href="/" class="sidebar-link">
+                <i data-lucide="home" class="sidebar-link-icon"></i>
+                <span>Trang chủ</span>
+            </a>
+            <a href="/Teacher/Dashboard" class="sidebar-link @(currentPage.Contains("Dashboard") ? "active" : "")">
+                <i data-lucide="layout-dashboard" class="sidebar-link-icon"></i>
+                <span>Bảng điều khiển</span>
+            </a>
+        </div>
+
+        <!-- Questions Section -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">Quản lý câu hỏi</div>
+            <a href="/Teacher/Questions/Create" class="sidebar-link @(currentPage.Contains("Questions/Create") ? "active" : "")">
+                <i data-lucide="plus-circle" class="sidebar-link-icon"></i>
+                <span>Tạo câu hỏi mới</span>
+            </a>
+            <a href="/Teacher/Questions" class="sidebar-link @(currentPage.EndsWith("Questions/Index") || currentPage.EndsWith("Questions") && !currentPage.Contains("Create") ? "active" : "")">
+                <i data-lucide="list" class="sidebar-link-icon"></i>
+                <span>Danh sách câu hỏi</span>
+            </a>
+        </div>
+
+        <!-- Exams Section -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">Đề thi</div>
+            <a href="/Teacher/Exams/Create" class="sidebar-link @(currentPage.Contains("Exams/Create") ? "active" : "")">
+                <i data-lucide="file-plus" class="sidebar-link-icon"></i>
+                <span>Tạo đề thi</span>
+            </a>
+            <a href="/Teacher/Exams" class="sidebar-link @(currentPage.EndsWith("Exams/Index") || currentPage.EndsWith("Exams") && !currentPage.Contains("Create") ? "active" : "")">
+                <i data-lucide="files" class="sidebar-link-icon"></i>
+                <span>Danh sách đề thi</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- User Footer -->
+    <div class="sidebar-footer">
+        <div class="sidebar-user">
+            <div class="sidebar-user-avatar">@userInitial</div>
+            <div class="sidebar-user-info">
+                <div class="sidebar-user-name">@fullName</div>
+                <div class="sidebar-user-role">Giáo viên</div>
+            </div>
+            <form method="post" asp-page="/Index" asp-page-handler="Logout">
+                <button type="submit" class="sidebar-logout-btn" title="Đăng xuất">
+                    <i data-lucide="log-out"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</aside>
+
+<!-- Sidebar Overlay (Mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
