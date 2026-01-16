@@ -1,0 +1,65 @@
+@* 
+    Teacher Layout - Shared layout for all Teacher pages
+    Provides: Sidebar, Header, Main content area
+*@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - ThiExam</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="~/css/teacher.css" asp-append-version="true" />
+    
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="teacher-page">
+    <!-- Sidebar -->
+    <partial name="~/Pages/Shared/Components/_TeacherSidebar.cshtml" />
+
+    <!-- Main Content -->
+    <main class="teacher-main">
+        <!-- Header -->
+        <header class="teacher-header">
+            <div class="teacher-header-content">
+                <div class="teacher-header-left">
+                    <button type="button" class="menu-toggle-btn" id="menuToggle" aria-label="Toggle menu">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <div>
+                        <h1 class="page-title">@ViewData["Title"]</h1>
+                        @if (ViewData["Subtitle"] != null)
+                        {
+                            <p class="page-subtitle">@ViewData["Subtitle"]</p>
+                        }
+                    </div>
+                </div>
+                <div class="teacher-header-right">
+                    @await RenderSectionAsync("HeaderActions", required: false)
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="teacher-content">
+            @RenderBody()
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/js/teacher.js" asp-append-version="true"></script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

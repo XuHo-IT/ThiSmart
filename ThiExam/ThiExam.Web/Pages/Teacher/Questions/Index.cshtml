@@ -1,0 +1,325 @@
+@page
+@model ThiExam.Web.Pages.Teacher.Questions.IndexModel
+
+@{
+    ViewData["Title"] = "Danh sách câu hỏi";
+    ViewData["Subtitle"] = "Quản lý và tìm kiếm câu hỏi của bạn";
+    Layout = "~/Pages/Teacher/_TeacherLayout.cshtml";
+}
+
+@section HeaderActions {
+    <a href="/Teacher/Questions/Create" class="btn btn-primary">
+        <i data-lucide="plus"></i>
+        <span>Tạo câu hỏi mới</span>
+    </a>
+}
+
+<!-- Alerts -->
+<div id="alertContainer">
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success">
+            <i data-lucide="check-circle" class="alert-icon"></i>
+            <div>@Model.SuccessMessage</div>
+            <button type="button" class="alert-close" onclick="this.parentElement.remove()">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-error">
+            <i data-lucide="alert-circle" class="alert-icon"></i>
+            <div>@Model.ErrorMessage</div>
+            <button type="button" class="alert-close" onclick="this.parentElement.remove()">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+    }
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="filters-form">
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label class="form-label">Tìm kiếm</label>
+                    <div class="search-input-wrapper">
+                        <i data-lucide="search" class="search-icon"></i>
+                        <input type="text" name="search" value="@Model.SearchTerm" 
+                               class="form-input search-input" 
+                               placeholder="Tìm theo nội dung câu hỏi...">
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="form-label">Danh mục</label>
+                    <select name="categoryId" class="form-select">
+                        <option value="">Tất cả danh mục</option>
+                        @foreach (var category in Model.Categories)
+                        {
+                            <option value="@category.Id" selected="@(Model.CategoryId == category.Id)">
+                                @category.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="form-label">Độ khó</label>
+                    <select name="level" class="form-select">
+                        <option value="">Tất cả</option>
+                        <option value="Easy" selected="@(Model.Level == "Easy")">Dễ</option>
+                        <option value="Medium" selected="@(Model.Level == "Medium")">Trung bình</option>
+                        <option value="Hard" selected="@(Model.Level == "Hard")">Khó</option>
+                    </select>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="filter"></i>
+                        <span>Lọc</span>
+                    </button>
+                    <a href="/Teacher/Questions" class="btn btn-secondary">
+                        <i data-lucide="refresh-cw"></i>
+                        <span>Reset</span>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="stats-row mb-4">
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-primary">
+            <i data-lucide="help-circle"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-value">@Model.TotalQuestions</div>
+            <div class="stat-label">Tổng câu hỏi</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-success">
+            <i data-lucide="check-circle"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-value">@Model.EasyCount</div>
+            <div class="stat-label">Câu dễ</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-warning">
+            <i data-lucide="alert-triangle"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-value">@Model.MediumCount</div>
+            <div class="stat-label">Câu TB</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon stat-icon-danger">
+            <i data-lucide="zap"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-value">@Model.HardCount</div>
+            <div class="stat-label">Câu khó</div>
+        </div>
+    </div>
+</div>
+
+<!-- Questions List -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i data-lucide="list" class="card-title-icon"></i>
+            Danh sách câu hỏi (@Model.Questions.Count kết quả)
+        </h3>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Questions.Count == 0)
+        {
+            <div class="empty-state">
+                <i data-lucide="inbox" class="empty-icon"></i>
+                <h3 class="empty-title">Không có câu hỏi nào</h3>
+                <p class="empty-text">Bạn chưa tạo câu hỏi nào hoặc không có kết quả phù hợp với bộ lọc.</p>
+                <a href="/Teacher/Questions/Create" class="btn btn-primary">
+                    <i data-lucide="plus"></i>
+                    <span>Tạo câu hỏi đầu tiên</span>
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>Nội dung câu hỏi</th>
+                            <th style="width: 150px;">Danh mục</th>
+                            <th style="width: 100px;">Độ khó</th>
+                            <th style="width: 100px;">Loại</th>
+                            <th style="width: 120px;">Ngày tạo</th>
+                            <th style="width: 120px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ var index = (Model.PageNumber - 1) * Model.PageSize; }
+                        @foreach (var question in Model.Questions)
+                        {
+                            index++;
+                            <tr>
+                                <td class="text-center">@index</td>
+                                <td>
+                                    <div class="question-content-cell">
+                                        @if (!string.IsNullOrEmpty(question.ImageUrl))
+                                        {
+                                            <img src="@question.ImageUrl" alt="Question image" class="question-thumb" />
+                                        }
+                                        <span class="question-text" title="@question.Content">
+                                            @(question.Content.Length > 100 ? question.Content.Substring(0, 100) + "..." : question.Content)
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="category-badge">@(question.CategoryName ?? "Không có")</span>
+                                </td>
+                                <td>
+                                    @{
+                                        var levelClass = question.Level switch
+                                        {
+                                            "Easy" or "1" => "badge-success",
+                                            "Medium" or "2" => "badge-warning", 
+                                            "Hard" or "3" => "badge-danger",
+                                            _ => "badge-secondary"
+                                        };
+                                        var levelText = question.Level switch
+                                        {
+                                            "Easy" or "1" => "Dễ",
+                                            "Medium" or "2" => "Trung bình",
+                                            "Hard" or "3" => "Khó",
+                                            _ => "Không xác định"
+                                        };
+                                    }
+                                    <span class="badge @levelClass">@levelText</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-secondary">
+                                        @(question.QuestionType == "MultipleChoice" || question.QuestionType == "1" ? "Trắc nghiệm" : "Tự luận")
+                                    </span>
+                                </td>
+                                <td class="text-muted">
+                                    @(question.CreatedAt?.ToString("dd/MM/yyyy") ?? "N/A")
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="/Teacher/Questions/Edit/@question.Id" class="btn-icon btn-icon-primary" title="Chỉnh sửa">
+                                            <i data-lucide="edit-2"></i>
+                                        </a>
+                                        <button type="button" class="btn-icon btn-icon-danger" 
+                                                title="Xóa" 
+                                                onclick="confirmDelete(@question.Id, '@question.Content.Replace("'", "\\'").Substring(0, Math.Min(50, question.Content.Length))')">
+                                            <i data-lucide="trash-2"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <div class="pagination-wrapper">
+                    <div class="pagination">
+                        @if (Model.PageNumber > 1)
+                        {
+                            <a href="/Teacher/Questions?pageNumber=@(Model.PageNumber - 1)&search=@Model.SearchTerm&categoryId=@Model.CategoryId&level=@Model.Level" 
+                               class="pagination-btn">
+                                <i data-lucide="chevron-left"></i>
+                            </a>
+                        }
+                        
+                        @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                        {
+                            <a href="/Teacher/Questions?pageNumber=@i&search=@Model.SearchTerm&categoryId=@Model.CategoryId&level=@Model.Level" 
+                               class="pagination-btn @(i == Model.PageNumber ? "active" : "")">
+                                @i
+                            </a>
+                        }
+                        
+                        @if (Model.PageNumber < Model.TotalPages)
+                        {
+                            <a href="/Teacher/Questions?pageNumber=@(Model.PageNumber + 1)&search=@Model.SearchTerm&categoryId=@Model.CategoryId&level=@Model.Level" 
+                               class="pagination-btn">
+                                <i data-lucide="chevron-right"></i>
+                            </a>
+                        }
+                    </div>
+                    <div class="pagination-info">
+                        Trang @Model.PageNumber / @Model.TotalPages
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-backdrop" onclick="closeDeleteModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">
+                <i data-lucide="alert-triangle" class="text-danger"></i>
+                Xác nhận xóa
+            </h3>
+            <button type="button" class="modal-close" onclick="closeDeleteModal()">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p>Bạn có chắc chắn muốn xóa câu hỏi này không?</p>
+            <p class="text-muted" id="deleteQuestionContent"></p>
+            <p class="text-danger"><strong>Hành động này không thể hoàn tác.</strong></p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Hủy</button>
+            <form method="post" asp-page-handler="Delete" id="deleteForm" style="display: inline;">
+                <input type="hidden" name="questionId" id="deleteQuestionId" />
+                <button type="submit" class="btn btn-danger">
+                    <i data-lucide="trash-2"></i>
+                    <span>Xóa</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Delete modal functions
+        function confirmDelete(id, content) {
+            document.getElementById('deleteQuestionId').value = id;
+            document.getElementById('deleteQuestionContent').textContent = content + '...';
+            document.getElementById('deleteModal').classList.add('show');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('show');
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeDeleteModal();
+            }
+        });
+    </script>
+}

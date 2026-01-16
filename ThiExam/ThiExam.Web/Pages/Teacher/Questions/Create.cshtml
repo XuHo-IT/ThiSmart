@@ -1,0 +1,380 @@
+@page
+@model ThiExam.Web.Pages.Teacher.Questions.CreateModel
+
+@{
+    ViewData["Title"] = "Tạo câu hỏi mới";
+    ViewData["Subtitle"] = "Thêm câu hỏi mới vào ngân hàng đề";
+    Layout = "~/Pages/Teacher/_TeacherLayout.cshtml";
+}
+
+@section HeaderActions {
+    <a href="/Teacher/Questions" class="btn btn-secondary">
+        <i data-lucide="arrow-left"></i>
+        <span>Quay lại</span>
+    </a>
+}
+
+<!-- Alerts -->
+<div id="alertContainer">
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success">
+            <i data-lucide="check-circle" class="alert-icon"></i>
+            <div>@Model.SuccessMessage</div>
+            <button type="button" class="alert-close" onclick="this.parentElement.remove()">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-error">
+            <i data-lucide="alert-circle" class="alert-icon"></i>
+            <div>@Model.ErrorMessage</div>
+            <button type="button" class="alert-close" onclick="this.parentElement.remove()">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+    }
+</div>
+
+<form method="post" id="createQuestionForm" class="question-form">
+    @Html.AntiForgeryToken()
+    
+    <div class="form-grid">
+        <!-- Left Column - Question Content -->
+        <div class="form-column">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i data-lucide="file-text" class="card-title-icon"></i>
+                        Nội dung câu hỏi
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Question Content -->
+                    <div class="form-group">
+                        <label class="form-label required">Nội dung câu hỏi</label>
+                        <textarea asp-for="Input.Content" 
+                                  class="form-textarea" 
+                                  rows="4" 
+                                  placeholder="Nhập nội dung câu hỏi..."
+                                  required></textarea>
+                        <span asp-validation-for="Input.Content" class="text-danger"></span>
+                    </div>
+
+                    <!-- Image URL -->
+                    <div class="form-group">
+                        <label class="form-label">Hình ảnh (URL)</label>
+                        <div class="image-input-group">
+                            <input asp-for="Input.ImageUrl" 
+                                   type="url" 
+                                   class="form-input" 
+                                   placeholder="https://example.com/image.jpg"
+                                   id="imageUrl" />
+                            <button type="button" class="btn btn-secondary" onclick="previewImage()">
+                                <i data-lucide="eye"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Input.ImageUrl" class="text-danger"></span>
+                        <div class="image-preview-container" id="imagePreviewContainer" style="display: none;">
+                            <img id="imagePreview" src="" alt="Preview" class="image-preview" />
+                            <button type="button" class="image-preview-remove" onclick="clearImage()">
+                                <i data-lucide="x"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Options Section -->
+            <div class="card" id="optionsCard">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i data-lucide="list-checks" class="card-title-icon"></i>
+                        Các lựa chọn
+                    </h3>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addOption()">
+                        <i data-lucide="plus"></i>
+                        <span>Thêm lựa chọn</span>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        <i data-lucide="info" style="width: 14px; height: 14px; display: inline;"></i>
+                        Chọn radio để đánh dấu đáp án đúng. Cần ít nhất 2 lựa chọn.
+                    </p>
+                    
+                    <div id="optionsContainer">
+                        <!-- Options will be added here dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Settings -->
+        <div class="form-column">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i data-lucide="settings" class="card-title-icon"></i>
+                        Cài đặt câu hỏi
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Category -->
+                    <div class="form-group">
+                        <label class="form-label">Danh mục</label>
+                        <select asp-for="Input.CategoryId" class="form-select">
+                            <option value="">-- Chọn danh mục --</option>
+                            @foreach (var category in Model.Categories)
+                            {
+                                <option value="@category.Id">@category.Name</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Input.CategoryId" class="text-danger"></span>
+                    </div>
+
+                    <!-- Difficulty Level -->
+                    <div class="form-group">
+                        <label class="form-label required">Độ khó</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" asp-for="Input.Level" value="Easy" checked />
+                                <span class="radio-custom"></span>
+                                <span class="badge badge-success">Dễ</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" asp-for="Input.Level" value="Medium" />
+                                <span class="radio-custom"></span>
+                                <span class="badge badge-warning">Trung bình</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" asp-for="Input.Level" value="Hard" />
+                                <span class="radio-custom"></span>
+                                <span class="badge badge-danger">Khó</span>
+                            </label>
+                        </div>
+                        <span asp-validation-for="Input.Level" class="text-danger"></span>
+                    </div>
+
+                    <!-- Question Type -->
+                    <div class="form-group">
+                        <label class="form-label required">Loại câu hỏi</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" asp-for="Input.QuestionType" value="MultipleChoice" checked 
+                                       onchange="toggleOptionsSection(true)" />
+                                <span class="radio-custom"></span>
+                                <span>Trắc nghiệm</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" asp-for="Input.QuestionType" value="Essay" 
+                                       onchange="toggleOptionsSection(false)" />
+                                <span class="radio-custom"></span>
+                                <span>Tự luận</span>
+                            </label>
+                        </div>
+                        <span asp-validation-for="Input.QuestionType" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-lg w-full">
+                            <i data-lucide="save"></i>
+                            <span>Lưu câu hỏi</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary w-full" onclick="resetForm()">
+                            <i data-lucide="refresh-cw"></i>
+                            <span>Nhập lại</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i data-lucide="help-circle" class="card-title-icon"></i>
+                        Hướng dẫn
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <ul class="help-list">
+                        <li>
+                            <i data-lucide="check" class="help-icon"></i>
+                            <span>Nội dung câu hỏi là bắt buộc</span>
+                        </li>
+                        <li>
+                            <i data-lucide="check" class="help-icon"></i>
+                            <span>Câu trắc nghiệm cần ít nhất 2 lựa chọn</span>
+                        </li>
+                        <li>
+                            <i data-lucide="check" class="help-icon"></i>
+                            <span>Phải chọn đúng 1 đáp án đúng</span>
+                        </li>
+                        <li>
+                            <i data-lucide="check" class="help-icon"></i>
+                            <span>Hình ảnh chỉ hỗ trợ URL</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        // Initialize with default options
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add 4 default options
+            for (let i = 0; i < 4; i++) {
+                addOption();
+            }
+            
+            // Select first option as correct by default
+            const firstRadio = document.querySelector('input[name="correctOption"]');
+            if (firstRadio) {
+                firstRadio.checked = true;
+            }
+            
+            lucide.createIcons();
+        });
+
+        // Toggle options section based on question type
+        function toggleOptionsSection(show) {
+            const optionsCard = document.getElementById('optionsCard');
+            optionsCard.style.display = show ? 'block' : 'none';
+        }
+
+        // Image preview
+        function previewImage() {
+            const url = document.getElementById('imageUrl').value;
+            const container = document.getElementById('imagePreviewContainer');
+            const preview = document.getElementById('imagePreview');
+            
+            if (url) {
+                preview.src = url;
+                container.style.display = 'block';
+                preview.onerror = function() {
+                    alert('Không thể tải hình ảnh từ URL này');
+                    container.style.display = 'none';
+                };
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        function clearImage() {
+            document.getElementById('imageUrl').value = '';
+            document.getElementById('imagePreviewContainer').style.display = 'none';
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('createQuestionForm').reset();
+            document.getElementById('imagePreviewContainer').style.display = 'none';
+            
+            // Reset options
+            document.getElementById('optionsContainer').innerHTML = '';
+            for (let i = 0; i < 4; i++) {
+                addOption();
+            }
+            
+            const firstRadio = document.querySelector('input[name="correctOption"]');
+            if (firstRadio) {
+                firstRadio.checked = true;
+            }
+            
+            toggleOptionsSection(true);
+            lucide.createIcons();
+        }
+
+        // Add option function
+        let optionIndex = 0;
+        function addOption() {
+            const container = document.getElementById('optionsContainer');
+            const optionHtml = `
+                <div class="option-item" data-index="${optionIndex}">
+                    <div class="option-row">
+                        <label class="option-radio">
+                            <input type="radio" name="correctOption" value="${optionIndex}" />
+                            <span class="radio-custom"></span>
+                        </label>
+                        <input type="text" 
+                               name="Options[${optionIndex}].Content" 
+                               class="form-input option-input" 
+                               placeholder="Nhập nội dung lựa chọn ${String.fromCharCode(65 + optionIndex)}..."
+                               required />
+                        <input type="hidden" name="Options[${optionIndex}].IsCorrect" value="false" class="is-correct-hidden" />
+                        <button type="button" class="btn-icon btn-icon-danger" onclick="removeOption(this)" title="Xóa">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', optionHtml);
+            optionIndex++;
+            lucide.createIcons();
+        }
+
+        function removeOption(btn) {
+            const container = document.getElementById('optionsContainer');
+            if (container.children.length <= 2) {
+                alert('Cần ít nhất 2 lựa chọn!');
+                return;
+            }
+            btn.closest('.option-item').remove();
+            reindexOptions();
+        }
+
+        function reindexOptions() {
+            const container = document.getElementById('optionsContainer');
+            const items = container.querySelectorAll('.option-item');
+            
+            items.forEach((item, index) => {
+                item.dataset.index = index;
+                
+                const radio = item.querySelector('input[type="radio"]');
+                radio.value = index;
+                
+                const textInput = item.querySelector('input[type="text"]');
+                textInput.name = `Options[${index}].Content`;
+                textInput.placeholder = `Nhập nội dung lựa chọn ${String.fromCharCode(65 + index)}...`;
+                
+                const hiddenInput = item.querySelector('.is-correct-hidden');
+                hiddenInput.name = `Options[${index}].IsCorrect`;
+            });
+            
+            optionIndex = items.length;
+        }
+
+        // Form submission - update IsCorrect values
+        document.getElementById('createQuestionForm').addEventListener('submit', function(e) {
+            const selectedRadio = document.querySelector('input[name="correctOption"]:checked');
+            if (!selectedRadio) {
+                e.preventDefault();
+                alert('Vui lòng chọn đáp án đúng!');
+                return;
+            }
+
+            // Reset all IsCorrect to false
+            document.querySelectorAll('.is-correct-hidden').forEach(input => {
+                input.value = 'false';
+            });
+
+            // Set selected option as correct
+            const selectedIndex = selectedRadio.value;
+            const selectedItem = document.querySelector(`.option-item[data-index="${selectedIndex}"]`);
+            if (selectedItem) {
+                selectedItem.querySelector('.is-correct-hidden').value = 'true';
+            }
+        });
+    </script>
+}

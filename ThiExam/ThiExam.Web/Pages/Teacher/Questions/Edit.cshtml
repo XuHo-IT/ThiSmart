@@ -1,0 +1,383 @@
+@page "{id:int}"
+@model ThiExam.Web.Pages.Teacher.Questions.EditModel
+
+@{
+    ViewData["Title"] = "Chỉnh sửa câu hỏi";
+    ViewData["Subtitle"] = "Cập nhật thông tin câu hỏi";
+    Layout = "~/Pages/Teacher/_TeacherLayout.cshtml";
+}
+
+@section HeaderActions {
+    <a href="/Teacher/Questions" class="btn btn-secondary">
+        <i data-lucide="arrow-left"></i>
+        <span>Quay lại</span>
+    </a>
+}
+
+<!-- Alerts -->
+<div id="alertContainer">
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success">
+            <i data-lucide="check-circle" class="alert-icon"></i>
+            <div>@Model.SuccessMessage</div>
+            <button type="button" class="alert-close" onclick="this.parentElement.remove()">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-error">
+            <i data-lucide="alert-circle" class="alert-icon"></i>
+            <div>@Model.ErrorMessage</div>
+            <button type="button" class="alert-close" onclick="this.parentElement.remove()">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+    }
+</div>
+
+<form method="post" id="editQuestionForm" class="question-form">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Input.Id" />
+    
+    <div class="form-grid">
+        <!-- Left Column - Question Content -->
+        <div class="form-column">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i data-lucide="file-text" class="card-title-icon"></i>
+                        Nội dung câu hỏi
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Question Content -->
+                    <div class="form-group">
+                        <label class="form-label required">Nội dung câu hỏi</label>
+                        <textarea asp-for="Input.Content" 
+                                  class="form-textarea" 
+                                  rows="4" 
+                                  placeholder="Nhập nội dung câu hỏi..."
+                                  required></textarea>
+                        <span asp-validation-for="Input.Content" class="text-danger"></span>
+                    </div>
+
+                    <!-- Image URL -->
+                    <div class="form-group">
+                        <label class="form-label">Hình ảnh (URL)</label>
+                        <div class="image-input-group">
+                            <input asp-for="Input.ImageUrl" 
+                                   type="url" 
+                                   class="form-input" 
+                                   placeholder="https://example.com/image.jpg"
+                                   id="imageUrl" />
+                            <button type="button" class="btn btn-secondary" onclick="previewImage()">
+                                <i data-lucide="eye"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Input.ImageUrl" class="text-danger"></span>
+                        <div class="image-preview-container" id="imagePreviewContainer" 
+                             style="display: @(string.IsNullOrEmpty(Model.Input.ImageUrl) ? "none" : "block");">
+                            <img id="imagePreview" src="@Model.Input.ImageUrl" alt="Preview" class="image-preview" />
+                            <button type="button" class="image-preview-remove" onclick="clearImage()">
+                                <i data-lucide="x"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Options Section -->
+            <div class="card" id="optionsCard" style="display: @(Model.Input.QuestionType == "MultipleChoice" ? "block" : "none");">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i data-lucide="list-checks" class="card-title-icon"></i>
+                        Các lựa chọn
+                    </h3>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addOption()">
+                        <i data-lucide="plus"></i>
+                        <span>Thêm lựa chọn</span>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        <i data-lucide="info" style="width: 14px; height: 14px; display: inline;"></i>
+                        Chọn radio để đánh dấu đáp án đúng. Cần ít nhất 2 lựa chọn.
+                    </p>
+                    
+                    <div id="optionsContainer">
+                        @for (int i = 0; i < Model.Options.Count; i++)
+                        {
+                            <div class="option-item" data-index="@i">
+                                <div class="option-row">
+                                    <label class="option-radio">
+                                        <input type="radio" name="correctOption" value="@i" 
+                                               @(Model.Options[i].IsCorrect ? "checked" : "") />
+                                        <span class="radio-custom"></span>
+                                    </label>
+                                    <input type="text" 
+                                           name="Options[@i].Content" 
+                                           value="@Model.Options[i].Content"
+                                           class="form-input option-input" 
+                                           placeholder="Nhập nội dung lựa chọn @((char)(65 + i))..."
+                                           required />
+                                    <input type="hidden" name="Options[@i].IsCorrect" value="@Model.Options[i].IsCorrect.ToString().ToLower()" class="is-correct-hidden" />
+                                    <button type="button" class="btn-icon btn-icon-danger" onclick="removeOption(this)" title="Xóa">
+                                        <i data-lucide="trash-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Settings -->
+        <div class="form-column">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i data-lucide="settings" class="card-title-icon"></i>
+                        Cài đặt câu hỏi
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Category -->
+                    <div class="form-group">
+                        <label class="form-label">Danh mục</label>
+                        <select asp-for="Input.CategoryId" class="form-select">
+                            <option value="">-- Chọn danh mục --</option>
+                            @foreach (var category in Model.Categories)
+                            {
+                                <option value="@category.Id">@category.Name</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Input.CategoryId" class="text-danger"></span>
+                    </div>
+
+                    <!-- Difficulty Level -->
+                    <div class="form-group">
+                        <label class="form-label required">Độ khó</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" asp-for="Input.Level" value="Easy" />
+                                <span class="radio-custom"></span>
+                                <span class="badge badge-success">Dễ</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" asp-for="Input.Level" value="Medium" />
+                                <span class="radio-custom"></span>
+                                <span class="badge badge-warning">Trung bình</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" asp-for="Input.Level" value="Hard" />
+                                <span class="radio-custom"></span>
+                                <span class="badge badge-danger">Khó</span>
+                            </label>
+                        </div>
+                        <span asp-validation-for="Input.Level" class="text-danger"></span>
+                    </div>
+
+                    <!-- Question Type (Read-only for edit) -->
+                    <div class="form-group">
+                        <label class="form-label">Loại câu hỏi</label>
+                        <input type="hidden" asp-for="Input.QuestionType" />
+                        <div class="form-input-readonly">
+                            @(Model.Input.QuestionType == "MultipleChoice" ? "Trắc nghiệm" : "Tự luận")
+                        </div>
+                        <p class="form-hint">Không thể thay đổi loại câu hỏi sau khi tạo</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-lg w-full">
+                            <i data-lucide="save"></i>
+                            <span>Lưu thay đổi</span>
+                        </button>
+                        <a href="/Teacher/Questions" class="btn btn-secondary w-full">
+                            <i data-lucide="x"></i>
+                            <span>Hủy</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i data-lucide="info" class="card-title-icon"></i>
+                        Thông tin
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="info-row">
+                        <span class="info-label">ID:</span>
+                        <span class="info-value">@Model.Input.Id</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Ngày tạo:</span>
+                        <span class="info-value">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Styles {
+    <style>
+        .form-input-readonly {
+            padding: 0.75rem 1rem;
+            background: var(--dark-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            color: var(--text-secondary);
+        }
+        
+        .info-value {
+            font-weight: 500;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        let optionIndex = @Model.Options.Count;
+
+        // Image preview
+        function previewImage() {
+            const url = document.getElementById('imageUrl').value;
+            const container = document.getElementById('imagePreviewContainer');
+            const preview = document.getElementById('imagePreview');
+            
+            if (url) {
+                preview.src = url;
+                container.style.display = 'block';
+                preview.onerror = function() {
+                    alert('Không thể tải hình ảnh từ URL này');
+                    container.style.display = 'none';
+                };
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        function clearImage() {
+            document.getElementById('imageUrl').value = '';
+            document.getElementById('imagePreviewContainer').style.display = 'none';
+        }
+
+        // Options management
+        function addOption() {
+            const container = document.getElementById('optionsContainer');
+            const optionHtml = `
+                <div class="option-item" data-index="${optionIndex}">
+                    <div class="option-row">
+                        <label class="option-radio">
+                            <input type="radio" name="correctOption" value="${optionIndex}" />
+                            <span class="radio-custom"></span>
+                        </label>
+                        <input type="text" 
+                               name="Options[${optionIndex}].Content" 
+                               class="form-input option-input" 
+                               placeholder="Nhập nội dung lựa chọn ${String.fromCharCode(65 + optionIndex)}..."
+                               required />
+                        <input type="hidden" name="Options[${optionIndex}].IsCorrect" value="false" class="is-correct-hidden" />
+                        <button type="button" class="btn-icon btn-icon-danger" onclick="removeOption(this)" title="Xóa">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', optionHtml);
+            optionIndex++;
+            lucide.createIcons();
+        }
+
+        function removeOption(btn) {
+            const container = document.getElementById('optionsContainer');
+            if (container.children.length <= 2) {
+                alert('Cần ít nhất 2 lựa chọn!');
+                return;
+            }
+            btn.closest('.option-item').remove();
+            reindexOptions();
+        }
+
+        function reindexOptions() {
+            const container = document.getElementById('optionsContainer');
+            const items = container.querySelectorAll('.option-item');
+            
+            items.forEach((item, index) => {
+                item.dataset.index = index;
+                
+                const radio = item.querySelector('input[type="radio"]');
+                radio.value = index;
+                
+                const textInput = item.querySelector('input[type="text"]');
+                textInput.name = `Options[${index}].Content`;
+                textInput.placeholder = `Nhập nội dung lựa chọn ${String.fromCharCode(65 + index)}...`;
+                
+                const hiddenInput = item.querySelector('.is-correct-hidden');
+                hiddenInput.name = `Options[${index}].IsCorrect`;
+            });
+            
+            optionIndex = items.length;
+        }
+
+        // Form submission - update IsCorrect values
+        document.getElementById('editQuestionForm').addEventListener('submit', function(e) {
+            const optionsCard = document.getElementById('optionsCard');
+            if (optionsCard.style.display !== 'none') {
+                const selectedRadio = document.querySelector('input[name="correctOption"]:checked');
+                if (!selectedRadio) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn đáp án đúng!');
+                    return;
+                }
+
+                // Reset all IsCorrect to false
+                document.querySelectorAll('.is-correct-hidden').forEach(input => {
+                    input.value = 'false';
+                });
+
+                // Set selected option as correct
+                const selectedIndex = selectedRadio.value;
+                const selectedItem = document.querySelector(`.option-item[data-index="${selectedIndex}"]`);
+                if (selectedItem) {
+                    selectedItem.querySelector('.is-correct-hidden').value = 'true';
+                }
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.getElementById('imageUrl').value) {
+                document.getElementById('imagePreviewContainer').style.display = 'block';
+            }
+        });
+    </script>
+}
